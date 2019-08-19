@@ -15,11 +15,14 @@ class MainActivity : AppCompatActivity() {
 
         gpsUtils = GpsUtils(this)
 
+        gpsUtils.onProgressUpdate = { show ->
+            println("need to show progress $show")
+        }
+
         button.setOnClickListener {
-            gpsUtils.checkGpsEnabled { lat, long ->
+            gpsUtils.getLatLong { lat, long ->
                 println("location is $lat + $long")
             }
-
         }
     }
 
