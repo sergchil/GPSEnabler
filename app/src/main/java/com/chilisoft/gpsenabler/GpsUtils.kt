@@ -18,10 +18,10 @@ class GpsUtils {
     private var weakActivity: WeakReference<FragmentActivity>? = null
     private var weakFragment: WeakReference<Fragment>? = null
 
-    private lateinit var mSettingsClient: SettingsClient
-    private lateinit var mLocationSettingsRequest: LocationSettingsRequest
+    private lateinit var settingsClient: SettingsClient
+    private lateinit var locationSettingsRequest: LocationSettingsRequest
     private lateinit var locationManager: LocationManager
-    private lateinit var mFusedLocationClient: FusedLocationProviderClient
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationRequest: LocationRequest
 
     constructor(fragment: Fragment) {
@@ -35,9 +35,9 @@ class GpsUtils {
     }
 
     private fun init(context: Context) {
-        mSettingsClient = LocationServices.getSettingsClient(context)
+        settingsClient = LocationServices.getSettingsClient(context)
         locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
         locationRequest = LocationRequest.create()
 
         locationRequest.apply {
@@ -46,7 +46,7 @@ class GpsUtils {
             fastestInterval = (1 * 1000).toLong()
         }
 
-        mLocationSettingsRequest = LocationSettingsRequest.Builder()
+        locationSettingsRequest = LocationSettingsRequest.Builder()
             .addLocationRequest(locationRequest)
             .setAlwaysShow(true)
             .build()
@@ -59,7 +59,7 @@ class GpsUtils {
 
             locationResult.locations.filterNotNull().forEach {
                 locationResultCallback?.invoke(it.latitude, it.longitude)
-                mFusedLocationClient.removeLocationUpdates(this)
+                fusedLocationClient.removeLocationUpdates(this)
                 onProgressUpdate?.invoke(false)
             }
         }
@@ -71,8 +71,6 @@ class GpsUtils {
         getLocation()
     }
 
-
-
     // check GPS state, if disabled open dialog and send back the result
     fun getLatLong(listener: (lat: Double, long: Double) -> Unit) {
         locationResultCallback = listener
@@ -83,8 +81,8 @@ class GpsUtils {
         } else {
 
             fun checkSettings() {
-                mSettingsClient
-                    .checkLocationSettings(mLocationSettingsRequest)
+                settingsClient
+                    .checkLocationSettings(locationSettingsRequest)
                     .addOnSuccessListener { onEnabledInSettings() }
                     .addOnFailureListener { onDisabledInSettings(it) }
             }
@@ -132,12 +130,12 @@ class GpsUtils {
     @SuppressLint("MissingPermission")
     private fun getLocation() {
 
-        mFusedLocationClient.lastLocation.addOnSuccessListener { location ->
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
             onProgressUpdate?.invoke(true)
             if (location != null) {
                 locationResultCallback?.invoke(location.latitude, location.longitude)
             } else {
-                mFusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
+                fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
             }
         }
 
